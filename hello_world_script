@@ -11,8 +11,9 @@ setup() {
     # Install the OCI cli - For MAC
     cd $HOME
     brew update && brew install oci-cli
+    echo "OCI Install Complete"
 
-    # Login
+    # Login - API Keys will be precongifured upon signin.
     oci setup bootstrap --config-location $config_file --profile-name "DEFAULT"
     echo "You're logged in."
 }
@@ -22,14 +23,21 @@ check_resource_group(){
     do
         read -p "What is the name of your storage bucket? " op_bucket_name
         oci os bucket get --bucket-name $op_bucket_name
-        read -p "Is this your bucket yes/no? " answer
-        if [ "$answer" = "yes" ];
+        local exit_code=$?
+
+        if [ $exit_code -ne 0 ];
         then 
-            bucket_name=$op_bucket_name
-            echo "Bucket saved"
-            break
-        else 
-            echo Sorry, try again.
+            echo Sorry, this bucket does not exist.
+        else
+            read -p "Is this your bucket yes/no? " answer
+            if [ "$answer" = "yes" ];
+            then 
+                bucket_name=$op_bucket_name
+                echo "Bucket saved"
+                break
+            else 
+                echo Sorry, try again.
+            fi
         fi
     done        
 }
