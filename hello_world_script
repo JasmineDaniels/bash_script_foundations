@@ -1,0 +1,68 @@
+#!/bin/bash
+
+# test first bash script
+
+config_file="~/.oci/config"
+bucket_name="temp"
+file_name=""
+
+# A setup function to initiate authenitcation.
+setup() {
+    # Install the OCI cli - For MAC
+    cd $HOME
+    brew update && brew install oci-cli
+
+    # Login
+    oci setup bootstrap --config-location $config_file --profile-name "DEFAULT"
+    echo "You're logged in."
+}
+
+check_resource_group(){
+    while true; 
+    do
+        read -p "What is the name of your storage bucket? " op_bucket_name
+        oci os bucket get --bucket-name $op_bucket_name
+        read -p "Is this your bucket yes/no? " answer
+        if [ "$answer" = "yes" ];
+        then 
+            bucket_name=$op_bucket_name
+            echo "Bucket saved"
+            break
+        else 
+            echo Sorry, try again.
+        fi
+    done        
+}
+
+# Retrieve the file to upload to your bucket
+get_File(){
+    while true;
+    do
+        read -p "What is the name of the file? " opt_file_name
+        if [ -f $opt_file_name ];
+        then 
+            file_name=$opt_file_name
+            echo "File exists"
+            break
+        else
+            echo "Sorry could not find file"
+        fi
+    done
+}
+
+add_file_to_bucket(){
+    oci os object put --bucket-name $bucket_name --file $file_name
+    local exit_code=$?
+
+    if [ $exit_code -ne 0 ];
+    then 
+        echo "An error occurred."
+    else
+        echo "File has been uploaded."
+    fi
+}
+
+#setup
+check_resource_group
+get_File
+add_file_to_bucket
